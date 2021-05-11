@@ -19,7 +19,6 @@
 * a menu bar that allows the player to select game and scoreboard
 
 
-
 '''
 import random
 import pygame
@@ -72,9 +71,14 @@ class App:
 
     def check_block(self):
         self.collided = pygame.sprite.spritecollide(self.player, self.block_list, False)
+        if (not(self.collided[0].dig())):
+            self.radar(self.collided[0].row, self.collided[0].col)
 
-        for b in self.collided:
-            b.check()
+    def radar(self,row, col):
+        print(row)
+        print(col)
+
+
 
 
     def on_init(self):
@@ -85,7 +89,7 @@ class App:
         self._display_surf.fill(WHITE)
         pygame.display.set_caption("Treasure Hunt")
 
-        self.font = pygame.font.SysFont("Comicsansms", 36)
+        self.font = pygame.font.SysFont(None, 36)
 
         #initializing game board
         self.init_board()
@@ -151,18 +155,17 @@ class Block(pygame.sprite.Sprite):
         self.image.fill(color)
         pygame.draw.rect(self.image, BLACK, ((0,0),(block_size,block_size)), 1)
         self.rect = self.image.get_rect()
-        self.treasure = False;
-        self.player_on = False;
-        self.treasure_text = font.render("T",1,(10,10,10));
+        self.treasure = False
+        self.player_on = False
+        self.treasure_text = font.render("T",1,(10,10,10))
 
     def hide_treasure(self):
-        self.treasure = True;
+        self.treasure = True
 
-    def check(self):
+    def dig(self):
         if (self.treasure):
             self.image.blit(self.treasure_text, (block_size/3,block_size/4))
-
-
+            return True
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
