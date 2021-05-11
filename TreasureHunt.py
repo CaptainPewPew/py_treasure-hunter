@@ -3,6 +3,23 @@
    Purpose: a treasure hunter game,displays hall of fame then asks for size of
             game board, gives player 10 guesses to find 3 treasures that are
             randomly placed on the game board.
+
+* diaply board
+* board is made out of blocks
+* hide treasure within the blocks
+* player block moves through the blocks
+* player is then able to search the block selected
+* if no treasure game will check if there's treasures around
+    * if there is threasure around it will show !
+    * if there is no treasure around it will show ?
+    * if treasure is found 'T' will show
+* When all treasre is found it the game will end
+* only ten moves allowed
+* if player wins then score will be added to database (time and moves)
+* a menu bar that allows the player to select game and scoreboard
+
+
+
 '''
 import random
 import pygame
@@ -13,6 +30,7 @@ RED = (255,0,0)
 GREEN = (0,255,0)
 WHITE = (255,255,255)
 BLACK = (0,0,0)
+block_size = 40;
 
 class App:
     def __init__(self):
@@ -20,54 +38,60 @@ class App:
         self._display_surf = None
         self.FPS = pygame.time.Clock()
         self.size = self.width, self.height = 640, 400
+        self.current_row = 0;
+        self.current_col = 0;
 
 
     def on_init(self):
         pygame.init()
+        #initializing window
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE| pygame.DOUBLEBUF)
         self._display_surf.fill(WHITE)
         pygame.display.set_caption("Treasure Hunt")
 
+        #initializing game board
         self.block_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
+        for col in range(10):
+            for row in range(10):
+                self.block = Block(GREEN, row, col, block_size, block_size)
+                self.block.rect.x = row*block_size
+                self.block.rect.y = col*block_size
 
-        self.block = Block(BLACK, 20, 20)
-        self.block.rect.x = random.randrange(self.width)
-        self.block.rect.y = random.randrange(self.height)
+                self.block_list.add(self.block)
+                self.all_sprites_list.add(self.block)
 
-        self.block_list.add(self.block)
-        self.all_sprites_list.add(self.block)
+        self.blocks = self.block_list.sprites()
 
+        #initialize treasures
 
         self._running = True
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
-            print("I run")
         elif event.type == KEYDOWN:
             if event.key == K_q or event.key == K_ESCAPE :
                 self._running = False
+            elif event.key == K_h:
+                self.current_col -= 1;
+            elif event.key == K_l:
+                self.current_col += 1;
+            elif event.key == K_j:
+                self.current_row += 1;
+            elif event.key == K_k:
+                self.current_row -= 1;
+
 
     def on_loop(self):
-        #self.pressed_keys = pygame.key.get_pressed()
-        #if self.pressed_keys[K_q]:
-        #    event.type = pygame.QUIT
-
         self.FPS.tick(24)
 
     def on_render(self):
-        #pygame.draw.line(self._display_surf, BLUE, (150,130), (130,170))
-        #pygame.draw.line(self._display_surf, BLUE, (150,130), (170,170))
-        #pygame.draw.line(self._display_surf, GREEN, (130,170), (170,170))
-        #pygame.draw.circle(self._display_surf, BLACK, (100,50), (30))
-
         self.all_sprites_list.draw(self._display_surf)
         pygame.display.update()
 
     def on_cleanup(self):
         pygame.quit()
-
 
     def on_execute(self):
         if self.on_init() == False:
@@ -80,13 +104,30 @@ class App:
             self.on_render()
         self.on_cleanup()
 
+
 class Block(pygame.sprite.Sprite):
-    def __init__(self, color, width, height):
+    def __init__(self, color, row, col, width, height):
         super().__init__()
+        self.row = row;
+        self.col = col;
         self.image = pygame.Surface([width,height])
         self.image.fill(color)
+        pygame.draw.rect(self.image, BLACK, ((0,0),(block_size,block_size)), 1)
         self.rect = self.image.get_rect()
+        self.tresure = False;
+        self.digged = False;
+        self.player_on = False;
 
+
+    def hide_tresure(self):
+        self.tresure = True;
+
+    def digged(self):
+        self.digged = True;
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        self.moves = 10;
 
 
 def main():
