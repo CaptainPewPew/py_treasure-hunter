@@ -55,11 +55,11 @@ class App:
         return  row, col
 
     def init_board(self):
-        for col in range(grid_size):
-            for row in range(grid_size):
-                self.block = Block(WHITE, row, col,self.font)
-                self.block.rect.x = row*block_size
-                self.block.rect.y = col*block_size
+        for row in range(grid_size):
+            for col in range(grid_size):
+                self.block = Block(WHITE, row, col)
+                self.block.rect.y = row*block_size
+                self.block.rect.x = col*block_size
 
                 self.block_list.add(self.block)
                 self.all_sprites_list.add(self.block)
@@ -71,14 +71,29 @@ class App:
 
     def check_block(self):
         self.collided = pygame.sprite.spritecollide(self.player, self.block_list, False)
-        if (not(self.collided[0].dig())):
-            self.radar(self.collided[0].row, self.collided[0].col)
+        if (not(self.collided[0].digged)):
+            if (self.collided[0].dig()):
+                self.collided[0].image.blit(self.treasure_text, (block_size/3,block_size/4))
+            else:
+                if (self.radar(self.collided[0].row, self.collided[0].col)):
+                    self.collided[0].image.blit(self.closeby_text, (block_size/3,block_size/4))
+                    self.collided[0].digged = True
+                else:
+                    self.collided[0].image.blit(self.nothing_text, (block_size/3,block_size/4))
+                    self.collided[0].digged = True
+        else:
+            pass
+
+
 
     def radar(self,row, col):
-        print(row)
-        print(col)
-
-
+        for i in (self.cnc(row-1,col-1), self.cnc(row-1,col), self.cnc(row-1,col+1), self.cnc(row,col-1), self.cnc(row,col+1), self.cnc(row+1,col-1), self.cnc(row+1,col), self.cnc(row+1,col+1)):
+            try:
+                if (self.blocks[i].treasure):
+                    return True
+            except IndexError:
+                continue
+        return False
 
 
     def on_init(self):
@@ -90,6 +105,9 @@ class App:
         pygame.display.set_caption("Treasure Hunt")
 
         self.font = pygame.font.SysFont(None, 36)
+        self.treasure_text = self.font.render("T",1,(10,10,10))
+        self.closeby_text = self.font.render("!",1,(10,10,10))
+        self.nothing_text = self.font.render("X",1,(10,10,10))
 
         #initializing game board
         self.init_board()
@@ -147,7 +165,7 @@ class App:
 
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, color, row, col, font):
+    def __init__(self, color, row, col):
         super().__init__()
         self.row = row;
         self.col = col;
@@ -157,15 +175,19 @@ class Block(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.treasure = False
         self.player_on = False
-        self.treasure_text = font.render("T",1,(10,10,10))
+        self.digged = False
 
     def hide_treasure(self):
         self.treasure = True
 
     def dig(self):
         if (self.treasure):
-            self.image.blit(self.treasure_text, (block_size/3,block_size/4))
+            self.treasure = False
+            self.digged = True
             return True
+        else:
+            return False
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
