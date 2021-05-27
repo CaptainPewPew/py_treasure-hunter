@@ -1,9 +1,8 @@
-'''Author: Lei Yu
-   Last Date Edited: 2021/05/11
-   Purpose: a treasure hunter game,displays hall of fame then asks for size of
-            game board, gives player 10 guesses to find 3 treasures that are
-            randomly placed on the game board.
+#!/usr/bin/env python3
 
+'''
+Author: Lei Yu
+Last Date Edited: 2021/05/27
 '''
 
 import random
@@ -27,7 +26,13 @@ class App:
         self.FPS = pygame.time.Clock()
         self.size = self.width, self.height = 640, 400
         self.treasures = 20
-        self.grid_size = 10;
+        self.grid_size = 10
+        self.game_state = 0
+        # 0 - game start menu
+        # 1 - main game loop
+        # 2 - game won
+        # 3 - game lost
+        # 4 - leader board menu
 
         self.block_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
@@ -39,11 +44,102 @@ class App:
         '''
         pygame.init()
         self.init_window()
-
-        #intialize text and font
         self.init_textfont()
+        # start game menu
+        self.init_menu()
+        self._running = True
 
-        self.moves_counter = Counter(self.font,"Moves left: ", 40, 400, 100)
+        # self.init_game()
+
+    def on_event(self, event):
+        if event.type == pygame.QUIT:
+            self._running = False
+        elif event.type == KEYDOWN:
+            if (event.key == K_q or event.key == K_ESCAPE):
+                self._running = False
+            elif (self.game_state == 0):
+                if (event.key == K_RETURN):
+                    self.game_state = 1
+                    self.selection1.kill()
+                    self.init_game()
+            elif (self.game_state == 1):
+                if (event.key == K_h or event.key == K_LEFT):
+                    self.player.move_left()
+                elif (event.key == K_l or event.key == K_RIGHT):
+                    self.player.move_right()
+                elif (event.key == K_j or event.key == K_DOWN):
+                    self.player.move_down()
+                elif (event.key == K_k or event.key == K_UP):
+                    self.player.move_up()
+                elif event.key == K_SPACE:
+                    self.check_block()
+                    self.check_game_state()
+            elif (self.game_state == 2):
+                pass
+            elif (self.game_state == 3):
+                pass
+            elif (self.game_state == 4):
+                pass
+
+    def on_loop(self):
+        self.FPS.tick(24)
+        # self.player.update()
+        # self.moves_counter.update()
+        # self.treasures_counter.update()
+
+    def on_render(self):
+        if (self.game_state == 0):
+            self._display_surf.fill(BLUE)
+        elif (self.game_state == 1):
+            self._display_surf.fill(WHITE)
+        elif (self.game_state == 2):
+            pass
+        elif (self.game_state == 3):
+            pass
+        elif (self.game_state == 4):
+            pass
+
+        self.all_sprites_list.draw(self._display_surf)
+        pygame.display.update()
+
+    def on_cleanup(self):
+        pygame.quit()
+
+    def on_execute(self):
+        if self.on_init() == False:
+            self._running = False
+
+        while (self._running):
+            for event in pygame.event.get():
+                self.on_event(event)
+            self.on_loop()
+            self.on_render()
+        self.on_cleanup()
+
+    def init_window(self):
+        '''
+        initializing_window, sets window title and window size
+        '''
+        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE| pygame.DOUBLEBUF)
+        pygame.display.set_caption("Treasure Hunt")
+
+    def init_textfont(self):
+        self.font = pygame.font.SysFont(None, 36)
+        self.treasure_text = self.font.render("T",1,(10,10,10))
+        self.nothing_text = self.font.render("X",1,(10,10,10))
+
+    def init_menu(self):
+        self._display_surf.fill(BLUE)
+        self.selection1 = Selection(self.font, "Start Game", 300, 300)
+        self.all_sprites_list.add(self.selection1)
+
+
+
+    def init_game(self):
+        #intialize text and font
+        self._display_surf.fill(WHITE)
+
+        self.moves_counter = Counter(self.font, "Moves left: ", 40, 400, 100)
         self.counter_list.add(self.moves_counter)
         self.all_sprites_list.add(self.moves_counter)
 
@@ -64,62 +160,6 @@ class App:
         #initialize treasures
         self.hide_treasures()
 
-        self._running = True
-
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
-        elif event.type == KEYDOWN:
-            if event.key == K_q or event.key == K_ESCAPE :
-                self._running = False
-            elif event.key == K_h:
-                self.player.move_left()
-            elif event.key == K_l:
-                self.player.move_right()
-            elif event.key == K_j:
-                self.player.move_down()
-            elif event.key == K_k:
-                self.player.move_up()
-            elif event.key == K_SPACE:
-                self.check_block()
-
-    def on_loop(self):
-        self.FPS.tick(24)
-        self.player.update()
-        self.moves_counter.update()
-        self.treasures_counter.update()
-
-    def on_render(self):
-        self._display_surf.fill(WHITE)
-        self.all_sprites_list.draw(self._display_surf)
-        pygame.display.update()
-
-    def on_cleanup(self):
-        pygame.quit()
-
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
-
-        while (self._running):
-            for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
-        self.on_cleanup()
-
-    def init_window(self):
-        '''
-        initializing_window
-        '''
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE| pygame.DOUBLEBUF)
-        self._display_surf.fill(WHITE)
-        pygame.display.set_caption("Treasure Hunt")
-
-    def init_textfont(self):
-        self.font = pygame.font.SysFont(None, 36)
-        self.treasure_text = self.font.render("T",1,(10,10,10))
-        self.nothing_text = self.font.render("X",1,(10,10,10))
 
     def cnc(self, row, col):
         '''
@@ -186,6 +226,12 @@ class App:
                     self.treasures_detected += 1
             except IndexError:
                 continue
+
+    def check_game_state(self):
+        if (self.moves_counter.count <= 0):
+            print("game lost")
+        if (self.treasures_counter.count <= 0):
+            print("game won")
 
 
 class Block(pygame.sprite.Sprite):
@@ -287,6 +333,22 @@ class Counter(pygame.sprite.Sprite):
 
     def update(self):
         self.image = self.font.render(self.message + str(self.count),1,BLACK)
+
+class Selection(pygame.sprite.Sprite):
+    def __init__(self, font, text, x, y):
+        super().__init__()
+        self.message = text
+        self.font = font
+        self.image = self.font.render(self.message, 1, BLACK)
+        self.rect = self.image.get_rect()
+        self.place_selection(x,y)
+
+    def place_selection(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def selected(self):
+        pass
 
 if __name__ == "__main__":
     theApp = App()
