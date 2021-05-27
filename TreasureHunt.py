@@ -4,22 +4,8 @@
             game board, gives player 10 guesses to find 3 treasures that are
             randomly placed on the game board.
 
-* diaply board
-* board is made out of blocks
-* hide treasure within the blocks
-* player block moves through the blocks
-* player is then able to search the block selected
-* if no treasure game will check if there's treasures around
-    * if there is threasure around it will show !
-    * if there is no treasure around it will show ?
-    * if treasure is found 'T' will show
-* When all treasre is found it the game will end
-* only ten moves allowed
-* if player wins then score will be added to database (time and moves)
-* a menu bar that allows the player to select game and scoreboard
-
-
 '''
+
 import random
 import pygame
 import math
@@ -30,92 +16,49 @@ RED = (255,0,0)
 GREEN = (0,255,0)
 WHITE = (255,255,255)
 BLACK = (0,0,0)
-block_size = 40;
-grid_size = 10;
 
 class App:
     def __init__(self):
+        '''
+        Initializes game constants
+        '''
         self._running = True
         self._display_surf = None
         self.FPS = pygame.time.Clock()
         self.size = self.width, self.height = 640, 400
+        self.treasures = 20
+        self.grid_size = 10;
+
         self.block_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
-
-
-    def cnc(self, row, col):
-        return (row*(grid_size) + (col))
-
-    def ncc(self, num):
-        '''
-            Return the coordinate using block number
-        '''
-        row = math.floor(num/(grid_size))
-        col = num%(grid_size)
-        return  row, col
-
-    def init_board(self):
-        for row in range(grid_size):
-            for col in range(grid_size):
-                self.block = Block(WHITE, row, col)
-                self.block.rect.y = row*block_size
-                self.block.rect.x = col*block_size
-
-                self.block_list.add(self.block)
-                self.all_sprites_list.add(self.block)
-
-    def hide_treasures(self):
-        self.target = random.sample(self.blocks,20)
-        for i in self.target:
-            i.hide_treasure()
-
-    def check_block(self):
-        self.collided = pygame.sprite.spritecollide(self.player, self.block_list, False)
-        if (not(self.collided[0].digged)):
-            if (self.collided[0].dig()):
-                self.collided[0].image.blit(self.treasure_text, (block_size/3,block_size/4))
-            else:
-                if (self.radar(self.collided[0].row, self.collided[0].col)):
-                    self.collided[0].image.blit(self.closeby_text, (block_size/3,block_size/4))
-                    self.collided[0].digged = True
-                else:
-                    self.collided[0].image.blit(self.nothing_text, (block_size/3,block_size/4))
-                    self.collided[0].digged = True
-        else:
-            pass
-
-
-
-    def radar(self,row, col):
-        for i in (self.cnc(row-1,col-1), self.cnc(row-1,col), self.cnc(row-1,col+1), self.cnc(row,col-1), self.cnc(row,col+1), self.cnc(row+1,col-1), self.cnc(row+1,col), self.cnc(row+1,col+1)):
-            try:
-                if (self.blocks[i].treasure):
-                    return True
-            except IndexError:
-                continue
-        return False
-
+        self.counter_list = pygame.sprite.Group()
 
     def on_init(self):
+        '''
+        Initializes the game
+        '''
         pygame.init()
+        self.init_window()
 
-        #initializing window
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE| pygame.DOUBLEBUF)
-        self._display_surf.fill(WHITE)
-        pygame.display.set_caption("Treasure Hunt")
+        #intialize text and font
+        self.init_textfont()
 
-        self.font = pygame.font.SysFont(None, 36)
-        self.treasure_text = self.font.render("T",1,(10,10,10))
-        self.closeby_text = self.font.render("!",1,(10,10,10))
-        self.nothing_text = self.font.render("X",1,(10,10,10))
+        self.moves_counter = Counter(self.font,"Moves left: ", 40, 400, 100)
+        self.counter_list.add(self.moves_counter)
+        self.all_sprites_list.add(self.moves_counter)
+
+        self.treasures_counter = Counter(self.font,"Treasures left: ", 20, 400, 200)
+        self.counter_list.add(self.treasures_counter)
+        self.all_sprites_list.add(self.treasures_counter)
 
         #initializing game board
         self.init_board()
+
+        # blocks sprite list
         self.blocks = self.block_list.sprites()
 
+        # Initialize Player
         self.player = Player()
-        self.player.rect.x = 0*block_size
-        self.player.rect.y = 0*block_size
         self.all_sprites_list.add(self.player)
 
         #initialize treasures
@@ -140,12 +83,14 @@ class App:
             elif event.key == K_SPACE:
                 self.check_block()
 
-
     def on_loop(self):
         self.FPS.tick(24)
+        self.player.update()
+        self.moves_counter.update()
+        self.treasures_counter.update()
 
     def on_render(self):
-        self.player.update()
+        self._display_surf.fill(WHITE)
         self.all_sprites_list.draw(self._display_surf)
         pygame.display.update()
 
@@ -163,42 +108,130 @@ class App:
             self.on_render()
         self.on_cleanup()
 
+    def init_window(self):
+        '''
+        initializing_window
+        '''
+        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE| pygame.DOUBLEBUF)
+        self._display_surf.fill(WHITE)
+        pygame.display.set_caption("Treasure Hunt")
+
+    def init_textfont(self):
+        self.font = pygame.font.SysFont(None, 36)
+        self.treasure_text = self.font.render("T",1,(10,10,10))
+        self.nothing_text = self.font.render("X",1,(10,10,10))
+
+    def cnc(self, row, col):
+        '''
+            retirm block number given coordinate
+        '''
+        return (row*(self.grid_size) + (col))
+
+    def ncc(self, num):
+        '''
+            Return the coordinate using block number
+        '''
+        row = math.floor(num/(self.grid_size))
+        col = num%(self.grid_size)
+        return  row, col
+
+    def init_board(self):
+        for row in range(self.grid_size):
+            for col in range(self.grid_size):
+                self.block = Block(WHITE, row, col)
+
+                self.block_list.add(self.block)
+                self.all_sprites_list.add(self.block)
+
+    def hide_treasures(self):
+        self.target = random.sample(self.blocks,self.treasures)
+        for i in self.target:
+            i.hide_treasure()
+
+    def check_block(self):
+        collided = pygame.sprite.spritecollide(self.player, self.block_list, False)
+        # print(f'row: {collided[0].row}')
+        # print(f'col: {collided[0].col}')
+
+        if (not(collided[0].digged)):
+            self.moves_counter.set_count()
+            # print(self.moves_counter.get_count())
+            if (collided[0].dig()):
+                self.draw_on_block(collided[0], self.treasure_text)
+                self.treasures_counter.set_count()
+            else:
+                self.check_surrounding(collided[0])
+                if (self.treasures_detected):
+                    self.closeby_text = self.font.render(f'{self.treasures_detected}',1,(10,10,10))
+                    self.draw_on_block(collided[0], self.closeby_text)
+                    collided[0].digged = True
+                else:
+                    self.draw_on_block(collided[0], self.nothing_text)
+                    collided[0].digged = True
+        else:
+            pass
+
+    def draw_on_block(self, block, text):
+        block.image.blit(text, (block.block_size/3,block.block_size/4))
+
+    def check_surrounding(self, block):
+        '''
+            Return the number of treasures around block
+        '''
+        row, col = block.row, block.col
+        self.treasures_detected = 0
+        for i in (self.cnc(row-1,col-1), self.cnc(row-1,col), self.cnc(row-1,col+1), self.cnc(row,col-1), self.cnc(row,col+1), self.cnc(row+1,col-1), self.cnc(row+1,col), self.cnc(row+1,col+1)):
+            try:
+                if (self.blocks[i].treasure and i >= 0):
+                    self.treasures_detected += 1
+            except IndexError:
+                continue
+
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, color, row, col):
         super().__init__()
-        self.row = row;
-        self.col = col;
-        self.image = pygame.Surface([block_size,block_size])
-        self.image.fill(color)
-        pygame.draw.rect(self.image, BLACK, ((0,0),(block_size,block_size)), 1)
-        self.rect = self.image.get_rect()
+        self.row, self.col = row, col;
+        self.block_size = 40;
         self.treasure = False
         self.player_on = False
         self.digged = False
+
+        self.image = pygame.Surface([self.block_size,self.block_size])
+        self.image.fill(color)
+        pygame.draw.rect(self.image, BLACK, ((0,0),(self.block_size,self.block_size)), 1)
+        self.rect = self.image.get_rect()
+
+        self.position_block(row,col)
+
+    def position_block(self, row, col):
+        self.rect.y = row*self.block_size
+        self.rect.x = col*self.block_size
 
     def hide_treasure(self):
         self.treasure = True
 
     def dig(self):
         if (self.treasure):
-            self.treasure = False
+            # self.treasure = False
             self.digged = True
             return True
         else:
             return False
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.row = 0;
         self.col = 0;
-        self.image = pygame.Surface([block_size,block_size])
+        self.block_size = 40;
+        self.image = pygame.Surface([self.block_size,self.block_size])
         self.image.fill(WHITE)
         self.image.set_colorkey(WHITE)
-        pygame.draw.rect(self.image, BLUE, ((0,0),(block_size,block_size)), 3)
+        pygame.draw.rect(self.image, BLUE, ((0,0),(self.block_size,self.block_size)), 3)
         self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 0
 
     def move_right(self):
         self.col += 1
@@ -224,6 +257,36 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.col * 40;
         self.rect.y = self.row * 40;
 
+class Counter(pygame.sprite.Sprite):
+    def __init__(self, font, text, count, x, y):
+        super().__init__()
+        self.message = text
+        self.count = count
+        self.font = font
+        self.image = self.font.render(self.message + str(self.count),1,BLACK)
+        self.rect = self.image.get_rect()
+
+        self.place_counter(x,y)
+
+    def place_counter(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def get_count(self):
+        return self.count
+
+    def set_count(self, num=-1):
+        '''
+        Will set the count of the counter, if count is not defined will automatically -1
+        (Maybe just change it to -1, but this gives more funcationality)
+        '''
+        if (num == -1):
+            self.count -= 1
+        else:
+            self.count = num
+
+    def update(self):
+        self.image = self.font.render(self.message + str(self.count),1,BLACK)
 
 if __name__ == "__main__":
     theApp = App()
