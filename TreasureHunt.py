@@ -91,6 +91,8 @@ class App:
                 elif event.key == K_SPACE:
                     self.check_block()
                     self.check_game_state()
+                else :
+                    print("Game is wrecked")
             elif (self.game_state == 2):
                 pass
             elif (self.game_state == 3):
@@ -100,9 +102,10 @@ class App:
 
     def on_loop(self):
         self.FPS.tick(24)
-        # self.player.update()
-        # self.moves_counter.update()
-        # self.treasures_counter.update()
+        if (self.game_state == 1):
+            self.player.update()
+            self.moves_counter.update()
+            self.treasures_counter.update()
 
     def on_render(self):
         if (self.game_state == 0):

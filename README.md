@@ -54,7 +54,7 @@ CLASSes
 #TODO
 [x] vim key binding for moving the cursor
     [x] Keyboard centric controll
-    [ ] but also allow for mouse control
+    [ ] but also allow for mouse control -> Might be a bit hard to implement
 [x] GUI
     [x] graphics (sprite)
 [ ] using SQL to handle scoreboard
