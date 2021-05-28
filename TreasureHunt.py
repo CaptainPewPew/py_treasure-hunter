@@ -59,9 +59,26 @@ class App:
                 self._running = False
             elif (self.game_state == 0):
                 if (event.key == K_RETURN):
-                    self.game_state = 1
-                    self.selection1.kill()
-                    self.init_game()
+                    if (self.selection1.selected):
+                        self.game_state = 1
+                        self.init_game()
+                        self.selection1.kill()
+                        self.selection2.kill()
+                        self.selection3.kill()
+                    elif (self.selection2.selected):
+                        pass
+                    elif (self.selection3.selected):
+                        self._running = False
+                elif (event.key == K_1):
+                    self.select_start()
+                elif (event.key == K_2):
+                    self.select_leader()
+                elif (event.key == K_3):
+                    self.select_quit()
+                elif (event.key == K_k or event.key == K_UP):
+                    self.menu_select("up")
+                elif (event.key == K_j or event.key == K_DOWN):
+                    self.menu_select("down")
             elif (self.game_state == 1):
                 if (event.key == K_h or event.key == K_LEFT):
                     self.player.move_left()
@@ -89,7 +106,7 @@ class App:
 
     def on_render(self):
         if (self.game_state == 0):
-            self._display_surf.fill(BLUE)
+            self._display_surf.fill(GREEN)
         elif (self.game_state == 1):
             self._display_surf.fill(WHITE)
         elif (self.game_state == 2):
@@ -130,10 +147,41 @@ class App:
 
     def init_menu(self):
         self._display_surf.fill(BLUE)
-        self.selection1 = Selection(self.font, "Start Game", 300, 300)
+        self.selection1 = Selection(self.font, "Start Game", 200, 200)
+        self.selection2 = Selection(self.font, "Leader Board", 200, 230)
+        self.selection3 = Selection(self.font, "Quit", 200, 260)
+        self.selections = (self.selection1, self.selection2, self.selection3)
         self.all_sprites_list.add(self.selection1)
+        self.all_sprites_list.add(self.selection2)
+        self.all_sprites_list.add(self.selection3)
+        self.selection1.select()
 
+    def select_start(self):
+        self.selection1.select()
+        self.selection2.deselect()
+        self.selection3.deselect()
 
+    def select_leader(self):
+        self.selection1.deselect()
+        self.selection2.select()
+        self.selection3.deselect()
+
+    def select_quit(self):
+        self.selection1.deselect()
+        self.selection2.deselect()
+        self.selection3.select()
+
+    def menu_select(self, direction):
+        if (direction == "up"):
+            if (self.selection2.selected == 1):
+                self.select_start()
+            elif (self.selection3.selected == 1):
+                self.select_leader()
+        elif (direction == "down"):
+            if (self.selection1.selected == 1):
+                self.select_leader()
+            elif (self.selection2.selected ==1):
+                self.select_quit()
 
     def init_game(self):
         #intialize text and font
@@ -342,13 +390,19 @@ class Selection(pygame.sprite.Sprite):
         self.image = self.font.render(self.message, 1, BLACK)
         self.rect = self.image.get_rect()
         self.place_selection(x,y)
+        self.selected = 0
 
     def place_selection(self, x, y):
         self.rect.x = x
         self.rect.y = y
 
-    def selected(self):
-        pass
+    def select(self):
+        self.selected = 1
+        self.image = self.font.render(self.message, 1, WHITE)
+
+    def deselect(self):
+        self.selected = 0
+        self.image = self.font.render(self.message, 1, BLACK)
 
 if __name__ == "__main__":
     theApp = App()
