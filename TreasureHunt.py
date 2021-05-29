@@ -31,8 +31,7 @@ class App:
         # 0 - game start menu
         # 1 - main game loop
         # 2 - game won
-        # 3 - game lost
-        # 4 - leader board menu
+        # 3 - leader board menu
 
         self.block_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
@@ -270,13 +269,54 @@ class App:
             Return the number of treasures around block
         '''
         row, col = block.row, block.col
+        current_cord = self.cnc(row, col)
         self.treasures_detected = 0
-        for i in (self.cnc(row-1,col-1), self.cnc(row-1,col), self.cnc(row-1,col+1), self.cnc(row,col-1), self.cnc(row,col+1), self.cnc(row+1,col-1), self.cnc(row+1,col), self.cnc(row+1,col+1)):
-            try:
-                if (self.blocks[i].treasure and i >= 0):
-                    self.treasures_detected += 1
-            except IndexError:
-                continue
+        check_list = (-11, -10, -9, -1, 1, 9, 10, 11 )
+        print(f'current cord = {current_cord}')
+        print(row, col)
+
+        try:
+            if (col == 0 and row == 0):
+                for i in (1, 10, 11):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            elif (col == 0 and row == 9):
+                for i in (1, -9, -10):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            elif (col == 0):
+                for i in (-10, -9, 1, 10, 11):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            elif (col == 9 and row == 0): #top right corner
+                for i in (-1, 9, 10):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            elif (col == 9 and row == 9):
+                for i in (-11, -10, -1):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            elif (col == 9):
+                for i in (-11, -10, -1, 9, 10):
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+            else:
+                for i in check_list:
+                    if (self.blocks[current_cord + i].treasure):
+                        self.treasures_detected += 1
+
+        except IndexError:
+            pass
+
+
+        # try:
+        #     if (self.blocks[current_cord + i].treasure):
+        #         self.treasures_detected += 1
+        # except IndexError:
+        #     print(i)
+        #     continue
+
+        # print("end check block\n")
 
     def check_game_state(self):
         if (self.moves_counter.count <= 0):
