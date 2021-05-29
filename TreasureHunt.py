@@ -5,14 +5,16 @@ Author: Lei Yu
 Last Date Edited: 2021/05/27
 
 
-Implement wining
+implement adding name when player wins
 '''
 
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'True'
 import random
 import pygame
 import math
+import sql
 from pygame.locals import *
-import sqlite3
 
 BLUE = (0,0,255)
 RED = (255,0,0)
@@ -31,6 +33,8 @@ class App:
         self.size = self.width, self.height = 640, 400
         self.treasures = 20
         self.grid_size = 10
+        self.connection = sql.create_connection("leader_board.db")
+        sql.create_score_table(self.connection)
         self.game_state = 0
         # 0 - game start menu
         # 1 - main game loop
@@ -38,6 +42,7 @@ class App:
         # 3 - leader board menu
 
         self.block_list = pygame.sprite.Group()
+        self.text_list = pygame.sprite.Group()
         self.all_sprites_list = pygame.sprite.Group()
         self.counter_list = pygame.sprite.Group()
 
@@ -69,7 +74,11 @@ class App:
                         self.selection2.kill()
                         self.selection3.kill()
                     elif (self.selection2.selected):
-                        pass
+                        self.game_state = 3
+                        self.show_leaderboard()
+                        self.selection1.kill()
+                        self.selection2.kill()
+                        self.selection3.kill()
                     elif (self.selection3.selected):
                         self._running = False
                 elif (event.key == K_1):
@@ -100,8 +109,6 @@ class App:
                 pass
             elif (self.game_state == 3):
                 pass
-            elif (self.game_state == 4):
-                pass
 
     def on_loop(self):
         self.FPS.tick(24)
@@ -115,10 +122,8 @@ class App:
             self._display_surf.fill(GREEN)
         elif (self.game_state == 1):
             self._display_surf.fill(WHITE)
-        elif (self.game_state == 2):
+        elif (self.game_state == 2 or self.game_state ==3):
             self._display_surf.fill(RED)
-        elif (self.game_state == 3):
-            pass
 
         self.all_sprites_list.draw(self._display_surf)
         pygame.display.update()
@@ -212,6 +217,23 @@ class App:
         #initialize treasures
         self.hide_treasures()
 
+    def show_leaderboard(self):
+        '''
+        0, name
+        1, score
+        2, date
+        '''
+        top_ten = sql.show_top_ten(self.connection)
+        a = -1
+        for i in top_ten:
+            a += 1
+            entry = Text(self.font, '{0:<10} {1:>5} {2:10}'.format(i[0], i[1], i[2]), 50, 50+(a*25))
+            self.text_list.add(entry)
+            self.all_sprites_list.add(entry)
+
+        message_quit = Text(self.font, 'Press q to quit', 250, 350)
+        self.text_list.add(message_quit)
+        self.all_sprites_list.add(message_quit)
 
     def cnc(self, row, col):
         '''
@@ -274,8 +296,8 @@ class App:
         current_cord = self.cnc(row, col)
         self.treasures_detected = 0
         check_list = (-11, -10, -9, -1, 1, 9, 10, 11 )
-        print(f'current cord = {current_cord}')
-        print(row, col)
+        # print(f'current cord = {current_cord}')
+        # print(row, col)
 
         try:
             if (col == 0 and row == 0):
@@ -312,11 +334,15 @@ class App:
     def check_game_state(self):
         if (self.treasures_counter.count <= 0):
             self.store_score(self.moves_counter.count)
+            for sprite in self.all_sprites_list.sprites():
+                sprite.kill()
             self.game_state = 2
+            self.show_leaderboard()
             print("game won")
 
-    def store_scroe(self, score):
-        pass
+    def store_score(self, score):
+        name = "Lei"
+        sql.add_entry(self.connection, name, score)
 
 
 class Block(pygame.sprite.Sprite):
@@ -412,6 +438,19 @@ class Counter(pygame.sprite.Sprite):
     def update(self):
         self.image = self.font.render(self.message + str(self.count),1,BLACK)
 
+class Text(pygame.sprite.Sprite):
+    def __init__(self,font, message, x, y):
+        super().__init__()
+        self.message = message
+        self.font = font
+        self.image = self.font.render(self.message,1,BLACK)
+        self.rect = self.image.get_rect()
+        self.place(x,y)
+
+    def place(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
 class Selection(pygame.sprite.Sprite):
     def __init__(self, font, text, x, y):
         super().__init__()
@@ -433,6 +472,8 @@ class Selection(pygame.sprite.Sprite):
     def deselect(self):
         self.selected = 0
         self.image = self.font.render(self.message, 1, BLACK)
+
+
 
 if __name__ == "__main__":
     theApp = App()

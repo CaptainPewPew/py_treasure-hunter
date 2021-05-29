@@ -39,7 +39,6 @@ def delete_all_records():
 def add_entry(connection, player, score):
     # create_entries = "INSERT INTO scores VALUES ({}, {}, {});".format(name, score, date.today())
     create_entries = """INSERT INTO scores (name, score, date) VALUES ('{}', {}, '{}');""".format(player, score, date.today())
-    print(create_entries)
     execute_query(connection, create_entries)
 
 def create_score_table(connection):
@@ -60,8 +59,13 @@ def show_table(connection):
     for score in scores:
         print(score)
 
-connection = create_connection("leader_board.db")
-create_score_table(connection)
+def show_top_ten(connection):
+    query = "SELECT name, score, date from scores ORDER BY score ASC, date DESC LIMIT 10"
+    top_ten = execute_read_query(connection, query)
+    return top_ten
+
+# connection = create_connection("leader_board.db")
+# create_score_table(connection)
 
 
 # add_entry(connection, 'Lei', 5)
@@ -80,13 +84,6 @@ create_score_table(connection)
 
 # delete_all_records()
 
-def show_top_ten(connection):
-    query = "SELECT name, score, date from scores ORDER BY score DESC LIMIT 10"
-    top_ten = execute_read_query(connection, query)
-    for row in top_ten:
-        print(row)
 
 
-show_top_ten(connection)
-
-print("Done!")
+# show_top_ten(connection)
