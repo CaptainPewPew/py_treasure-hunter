@@ -3,12 +3,16 @@
 '''
 Author: Lei Yu
 Last Date Edited: 2021/05/27
+
+
+Implement wining
 '''
 
 import random
 import pygame
 import math
 from pygame.locals import *
+import sqlite3
 
 BLUE = (0,0,255)
 RED = (255,0,0)
@@ -112,10 +116,8 @@ class App:
         elif (self.game_state == 1):
             self._display_surf.fill(WHITE)
         elif (self.game_state == 2):
-            pass
+            self._display_surf.fill(RED)
         elif (self.game_state == 3):
-            pass
-        elif (self.game_state == 4):
             pass
 
         self.all_sprites_list.draw(self._display_surf)
@@ -189,7 +191,7 @@ class App:
         #intialize text and font
         self._display_surf.fill(WHITE)
 
-        self.moves_counter = Counter(self.font, "Moves left: ", 40, 400, 100)
+        self.moves_counter = Counter(self.font, "Moves left: ", 0, 400, 100)
         self.counter_list.add(self.moves_counter)
         self.all_sprites_list.add(self.moves_counter)
 
@@ -244,11 +246,11 @@ class App:
         # print(f'col: {collided[0].col}')
 
         if (not(collided[0].digged)):
-            self.moves_counter.set_count()
+            self.moves_counter.set_count(1)
             # print(self.moves_counter.get_count())
             if (collided[0].dig()):
                 self.draw_on_block(collided[0], self.treasure_text)
-                self.treasures_counter.set_count()
+                self.treasures_counter.set_count(-1)
             else:
                 self.check_surrounding(collided[0])
                 if (self.treasures_detected):
@@ -304,25 +306,17 @@ class App:
                 for i in check_list:
                     if (self.blocks[current_cord + i].treasure):
                         self.treasures_detected += 1
-
         except IndexError:
             pass
 
-
-        # try:
-        #     if (self.blocks[current_cord + i].treasure):
-        #         self.treasures_detected += 1
-        # except IndexError:
-        #     print(i)
-        #     continue
-
-        # print("end check block\n")
-
     def check_game_state(self):
-        if (self.moves_counter.count <= 0):
-            print("game lost")
         if (self.treasures_counter.count <= 0):
+            self.store_score(self.moves_counter.count)
+            self.game_state = 2
             print("game won")
+
+    def store_scroe(self, score):
+        pass
 
 
 class Block(pygame.sprite.Sprite):
@@ -412,15 +406,8 @@ class Counter(pygame.sprite.Sprite):
     def get_count(self):
         return self.count
 
-    def set_count(self, num=-1):
-        '''
-        Will set the count of the counter, if count is not defined will automatically -1
-        (Maybe just change it to -1, but this gives more funcationality)
-        '''
-        if (num == -1):
-            self.count -= 1
-        else:
-            self.count = num
+    def set_count(self, num):
+        self.count += num
 
     def update(self):
         self.image = self.font.render(self.message + str(self.count),1,BLACK)
