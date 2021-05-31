@@ -129,6 +129,7 @@ class App:
         pygame.display.update()
 
     def on_cleanup(self):
+        self.connection.close()
         pygame.quit()
 
     def on_execute(self):
@@ -196,7 +197,7 @@ class App:
         #intialize text and font
         self._display_surf.fill(WHITE)
 
-        self.moves_counter = Counter(self.font, "Moves left: ", 0, 400, 100)
+        self.moves_counter = Counter(self.font, "Moves made: ", 0, 400, 100)
         self.counter_list.add(self.moves_counter)
         self.all_sprites_list.add(self.moves_counter)
 
