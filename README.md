@@ -3,7 +3,7 @@ This was originally a game made in python2 for Gr.11 computer science class,
 it has now been remade in PyGame with more funcationality.
 Though it is still in the early stages and it is very minimal.
 
-#TODO:
+# TODO:
 
 - [x] vim key binding for moving the cursor
 
