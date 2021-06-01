@@ -4,22 +4,23 @@ it has now been remade in PyGame with more funcationality.
 Though it is still in the early stages and it is very minimal.
 
 #TODO:
-[x] vim key binding for moving the cursor
 
-    [x] Keyboard centric controll
+- [x] vim key binding for moving the cursor
 
-    [ ] but also allow for mouse control -> Might be a bit hard to implement
+    - [x] Keyboard centric controll
 
-[x] GUI
+    - [ ] but also allow for mouse control -> Might be a bit hard to implement
 
-    [ ] graphics (sprite)
+- [x] GUI
 
-[x] using SQL to handle scoreboard
+    - [ ] graphics (sprite)
 
-    [x] record moves made
+- [x] using SQL to handle scoreboard
 
-    [ ] able to enter player name at game end
+    - [x] record moves made
 
-[ ] Add music and sound effects
+- [ ] able to enter player name at game end
 
-[ ] rebalance the game
+- [ ] Add music and sound effects
+
+- [ ] rebalance the game
